@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -274,6 +275,14 @@ func init() {
 			Usage:   "<text>",
 			Desc:    "search messages in a target",
 			Handle:  commandDoSearch,
+		},
+		"SJG": {
+			AllowHome: true,
+			MinArgs:   0,
+			MaxArgs:   1,
+			Usage:     "[query]",
+			Desc:      "suspend senpai and open the external history search (default: sjg -I)",
+			Handle:    commandDoSJG,
 		},
 		"AWAY": {
 			AllowHome: true,
@@ -957,6 +966,71 @@ func commandDoSearch(app *App, args []string) (err error) {
 		return errors.New("server does not support searching")
 	}
 	s.Search(channel, text)
+	return nil
+}
+
+// defaultSearchCommand is the external command run by /sjg when the
+// search-command config directive is unset or empty. It is an argv-style
+// command line split on whitespace (no shell quoting); see commandDoSJG.
+const defaultSearchCommand = "sjg -I"
+
+// commandDoSJG suspends the senpai TUI, runs the configured external search
+// program attached to the same terminal, then resumes the TUI. Resume is
+// guaranteed to run even when the child fails, so the terminal is never left in
+// raw mode or on the alternate screen. This handler runs on the eventLoop
+// goroutine (the only goroutine that draws), so Suspend/Resume cannot race a
+// Draw: the draw for this input happens after the handler returns.
+func commandDoSJG(app *App, args []string) (err error) {
+	// Resolve the command line, falling back to the default so we never build
+	// an empty argv (e.g. search-command set to "" or only whitespace).
+	cmdline := strings.TrimSpace(app.cfg.SearchCommand)
+	if cmdline == "" {
+		cmdline = defaultSearchCommand
+	}
+	// Simple whitespace split; quoting/escaping within the value is not
+	// supported (documented limitation).
+	argv := strings.Fields(cmdline)
+
+	// Optional initial query typed after "/sjg". With MaxArgs:1, fieldsN puts
+	// the whole remainder into args[0], so a multi-word query is preserved.
+	if len(args) > 0 {
+		argv = append(argv, args[0])
+	}
+
+	// Hand the terminal to the child. If Suspend fails, senpai still owns the
+	// terminal, so do NOT run the child and do NOT resume (nothing to resume).
+	if suspendErr := app.win.Suspend(); suspendErr != nil {
+		return fmt.Errorf("cannot suspend the interface: %w", suspendErr)
+	}
+
+	// From here the TUI is suspended: Resume MUST run however we leave this
+	// function, or senpai is left with a dead terminal. Only surface a Resume
+	// error when the child itself succeeded, so a child error is never masked.
+	defer func() {
+		if resumeErr := app.win.Resume(); resumeErr != nil {
+			if err == nil {
+				err = fmt.Errorf("cannot resume the interface: %w", resumeErr)
+			}
+			return
+		}
+		// vaxis flags itself for resize on Resume, but senpai must recompute
+		// its own layout for the (possibly changed) terminal size. The event
+		// loop draws once this handler returns.
+		app.win.Resize()
+	}()
+
+	// Run the child attached to the real terminal. Inheriting the standard
+	// streams lets it drive its own fullscreen UI and keeps its stderr out of
+	// senpai's raw-mode screen.
+	cmd := exec.Command(argv[0], argv[1:]...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if runErr := cmd.Run(); runErr != nil {
+		// Non-zero exit / missing binary: surfaced as a red "!!" line by the
+		// "send" action (app.go:1030-1038). Resume already ran via the defer.
+		return fmt.Errorf("%s: %w", argv[0], runErr)
+	}
 	return nil
 }
 

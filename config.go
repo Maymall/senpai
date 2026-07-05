@@ -117,6 +117,7 @@ type Config struct {
 	Colors ui.ConfigColors
 
 	OpenLink          string
+	SearchCommand     string
 	Debug             bool
 	Transient         bool
 	LocalIntegrations bool
@@ -169,6 +170,7 @@ func Defaults() Config {
 		Debug:             false,
 		Transient:         false,
 		LocalIntegrations: true,
+		SearchCommand:     defaultSearchCommand,
 	}
 }
 
@@ -487,6 +489,8 @@ func unmarshal(filename string, cfg *Config) (err error) {
 			if cfg.LocalIntegrations, err = strconv.ParseBool(localIntegrations); err != nil {
 				return err
 			}
+		case "search-command":
+			cfg.SearchCommand = strings.Join(d.Params, " ")
 		default:
 			return fmt.Errorf("unknown directive %q", d.Name)
 		}

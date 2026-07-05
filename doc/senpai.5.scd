@@ -275,6 +275,15 @@ shortcuts {
 	DBus). Can be useful to disable on systems planned to be used through SSH.
 	Defaults to true.
 
+*search-command* <command...>
+	Command line run by the */sjg* command (see senpai(1)). senpai suspends
+	itself, runs this command attached to the terminal, then resumes when it
+	exits. Use it to plug in an external fullscreen chat-history search tool.
+	The value is tokenized on whitespace into a command and its arguments;
+	individual arguments cannot contain embedded spaces (any quoting is
+	flattened before splitting, so a program path containing a space is
+	unsupported). Defaults to *sjg -I*.
+
 *on-highlight-path*
 	Advanced. senpai will notify you by default without the need for a custom
 	highlight script.

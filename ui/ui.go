@@ -242,6 +242,20 @@ func (ui *UI) Close() {
 	ui.vx.Close()
 }
 
+// Suspend releases the terminal (restoring cooked mode and leaving the
+// alternate screen) so an external fullscreen program can take it over. Every
+// successful Suspend must be paired with a Resume.
+func (ui *UI) Suspend() error {
+	return ui.vx.Suspend()
+}
+
+// Resume re-acquires the terminal after Suspend: it re-enters raw mode and the
+// alternate screen and restarts the input parser. Callers should follow up with
+// Resize so senpai recomputes its layout.
+func (ui *UI) Resume() error {
+	return ui.vx.Resume()
+}
+
 func (ui *UI) Buffer(i int) (netID, title string, ok bool) {
 	return ui.bs.Buffer(i)
 }

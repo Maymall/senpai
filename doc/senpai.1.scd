@@ -287,6 +287,12 @@ _name_ is matched case-insensitively.  It can be one of the following:
 	Search messages matching the given text, in the current channel or server.
 	This opens a temporary list, which can be closed with the escape key.
 
+*SJG* [query]
+	Suspend senpai and run an external chat-history search tool (by default
+	*sjg -I*, configurable with the *search-command* directive; see
+	senpai(5)). If _query_ is given, it is passed to the tool as its last
+	argument. senpai resumes automatically when the tool exits.
+
 *AWAY* [message]
 	Mark yourself as away, with an optional away message. Use *BACK* to cancel.
 
