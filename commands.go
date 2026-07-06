@@ -281,7 +281,7 @@ func init() {
 			MinArgs:   0,
 			MaxArgs:   1,
 			Usage:     "[query]",
-			Desc:      "suspend senpai and open the external history search (default: sjg -I)",
+			Desc:      "suspend senpai and open the external history search (default: sjg -t)",
 			Handle:    commandDoSJG,
 		},
 		"AWAY": {
@@ -972,7 +972,7 @@ func commandDoSearch(app *App, args []string) (err error) {
 // defaultSearchCommand is the external command run by /sjg when the
 // search-command config directive is unset or empty. It is an argv-style
 // command line split on whitespace (no shell quoting); see commandDoSJG.
-const defaultSearchCommand = "sjg -I"
+const defaultSearchCommand = "sjg -t"
 
 // commandDoSJG suspends the senpai TUI, runs the configured external search
 // program attached to the same terminal, then resumes the TUI. Resume is

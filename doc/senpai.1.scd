@@ -289,7 +289,7 @@ _name_ is matched case-insensitively.  It can be one of the following:
 
 *SJG* [query]
 	Suspend senpai and run an external chat-history search tool (by default
-	*sjg -I*, configurable with the *search-command* directive; see
+	*sjg -t*, configurable with the *search-command* directive; see
 	senpai(5)). If _query_ is given, it is passed to the tool as its last
 	argument. senpai resumes automatically when the tool exits.
 

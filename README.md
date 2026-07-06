@@ -21,7 +21,7 @@ chat-history search tool without leaving senpai:
   attached to the same terminal, and resumes senpai cleanly when it exits
   (the terminal is always restored, even if the child fails).
 - The command is configurable via the `search-command` directive in the
-  senpai config file and defaults to `sjg -I`. See `doc/senpai.5.scd` for the
+  senpai config file and defaults to `sjg -t`. See `doc/senpai.5.scd` for the
   directive and `doc/senpai.1.scd` for the command.
 
 That's the entire delta from upstream; everything else is unchanged.
